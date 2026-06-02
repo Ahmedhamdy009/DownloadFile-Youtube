@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REDFIRE | Premium YouTube Downloader</title>
+  <meta name="description" content="Download YouTube Videos and Audio in High Quality. 1080p, MP3, MP4 formats. Simple, premium, and lightning fast.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Socket.io Client -->
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient background glow blobs -->
+  <div class="glow-blob glow-red"></div>
+  <div class="glow-blob glow-teal"></div>
+  
+  <div class="container">
+    <!-- Navbar Header -->
+    <header class="navbar">
+      <div class="logo">
+        <span class="logo-icon"><i class="fa-solid fa-fire"></i></span>
+        <span class="logo-text">RED<span class="highlight">FIRE</span></span>
+      </div>
+      <div class="nav-links">
+        <a href="#home" class="nav-link active">Downloader</a>
+        <a href="https://github.com" target="_blank" class="nav-link"><i class="fa-brands fa-github"></i> Docs</a>
+      </div>
+    </header>
+
+    <!-- Main Content Frame -->
+    <main class="content-frame">
+      
+      <!-- HERO & URL FORM (STATE: IDLE) -->
+      <section id="search-section" class="state-section active">
+        <div class="hero">
+          <div class="badge">LIGHTNING FAST DOWNLOADS</div>
+          <h1 class="hero-title">Download Premium Media <br>From <span class="text-gradient">YouTube</span></h1>
+          <p class="hero-subtitle">Convert and download YouTube videos, Shorts, and playlists in ultra-high quality MP4 or MP3 instantly.</p>
+        </div>
+
+        <div class="input-card glass-card">
+          <form id="url-form">
+            <div class="input-wrapper">
+              <i class="fa-solid fa-link input-icon"></i>
+              <input type="text" id="url-input" placeholder="Paste YouTube link here..." required autocomplete="off">
+              <button type="button" id="paste-btn" class="glass-btn" title="Paste from clipboard">
+                <i class="fa-solid fa-clipboard"></i> <span>Paste</span>
+              </button>
+            </div>
+            <button type="submit" id="submit-btn" class="btn-primary">
+              <span>Analyze</span> <i class="fa-solid fa-arrow-right btn-icon"></i>
+            </button>
+          </form>
+          <div id="error-message" class="error-box hidden">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="error-text">Please enter a valid URL.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SKELETON LOADER (STATE: FETCHING) -->
+      <section id="skeleton-section" class="state-section hidden">
+        <div class="skeleton-card glass-card">
+          <div class="skeleton-left">
+            <div class="skeleton-thumb pulse"></div>
+          </div>
+          <div class="skeleton-right">
+            <div class="skeleton-line title pulse"></div>
+            <div class="skeleton-line meta pulse"></div>
+            <div class="skeleton-line button-row pulse"></div>
+            <div class="skeleton-line main-btn pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESULT CARD (STATE: METADATA LOADED) -->
+      <section id="result-section" class="state-section hidden">
+        <div class="result-card glass-card">
+          <!-- Left metadata block -->
+          <div class="result-left">
+            <div class="thumbnail-wrapper">
+              <img id="video-thumbnail" src="" alt="Video Thumbnail">
+              <span id="video-duration" class="duration-badge">0:00</span>
+            </div>
+            <div class="video-info">
+              <h2 id="video-title">Video Title</h2>
+              <p id="video-uploader" class="uploader-name"><i class="fa-solid fa-circle-check"></i> Channel Name</p>
+              <div class="video-stats">
+                <span><i class="fa-solid fa-eye"></i> <span id="video-views">0</span> views</span>
+                <span><i class="fa-solid fa-calendar-days"></i> <span id="video-date">Date</span></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right downloads options block -->
+          <div class="result-right">
+            <div class="tabs-container">
+              <button class="tab-btn active" data-tab="video">
+                <i class="fa-solid fa-video"></i> Video (MP4)
+              </button>
+              <button class="tab-btn" data-tab="audio">
+                <i class="fa-solid fa-music"></i> Audio (MP3)
+              </button>
+            </div>
+
+            <!-- Video Options Tab Content -->
+            <div id="video-tab" class="tab-content active">
+              <label class="select-label">Select Video Quality</label>
+              <div class="select-wrapper">
+                <select id="video-quality" class="glass-select">
+                  <!-- Will populate dynamically -->
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+              <div class="info-note">
+                <i class="fa-solid fa-circle-info"></i> Higher resolutions (1080p+) will be auto-merged using FFmpeg for pristine quality.
+              </div>
+            </div>
+
+            <!-- Audio Options Tab Content -->
+            <div id="audio-tab" class="tab-content">
+              <label class="select-label">Audio Quality</label>
+              <div class="select-wrapper">
+                <select id="audio-quality" class="glass-select">
+                  <option value="best">Highest Quality MP3 (320kbps)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+              <div class="info-note">
+                <i class="fa-solid fa-circle-info"></i> Audio will be extracted and converted directly into a clean, tagged MP3 file.
+              </div>
+            </div>
+
+            <button id="download-btn" class="btn-primary start-download-btn">
+              <i class="fa-solid fa-download btn-icon-left"></i> Download Now
+            </button>
+            
+            <button id="cancel-result-btn" class="btn-secondary">
+              <i class="fa-solid fa-arrow-left"></i> Go Back
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROGRESS SYSTEM CARD (STATE: DOWNLOADING) -->
+      <section id="progress-section" class="state-section hidden">
+        <div class="progress-card glass-card">
+          <div class="progress-header">
+            <span id="progress-title" class="truncate">Downloading Video Title...</span>
+            <span id="progress-status-badge" class="badge-status">Downloading</span>
+          </div>
+
+          <div class="progress-display">
+            <!-- Dial progress display -->
+            <div class="progress-circular-container">
+              <svg class="progress-svg" viewBox="0 0 120 120">
+                <circle class="progress-bg-circle" cx="60" cy="60" r="50"></circle>
+                <circle id="progress-fill-circle" class="progress-fill-circle" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="progress-value-overlay">
+                <span id="progress-percentage">0%</span>
+              </div>
+            </div>
+            
+            <!-- Horizontal linear progress as fallback/extra detail -->
+            <div class="progress-bar-container">
+              <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+            
+            <!-- Real-time readouts -->
+            <div class="readout-grid">
+              <div class="readout-item">
+                <span class="readout-label"><i class="fa-solid fa-gauge-high"></i> Speed</span>
+                <span id="progress-speed" class="readout-val">0 KB/s</span>
+              </div>
+              <div class="readout-item">
+                <span class="readout-label"><i class="fa-solid fa-clock"></i> ETA</span>
+                <span id="progress-eta" class="readout-val">--:--</span>
+              </div>
+              <div class="readout-item">
+                <span class="readout-label"><i class="fa-solid fa-database"></i> Size</span>
+                <span id="progress-size" class="readout-val">Calculating...</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="status-message" class="status-status-msg">
+            <i class="fa-solid fa-spinner fa-spin"></i> Preparing downloads streams...
+          </div>
+        </div>
+      </section>
+
+      <!-- SUCCESS SCREEN CARD (STATE: COMPLETED) -->
+      <section id="success-section" class="state-section hidden">
+        <div class="success-card glass-card">
+          <div class="success-icon-wrapper">
+            <div class="success-circle">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          </div>
+          <h2 class="success-title">Download Completed!</h2>
+          <p class="success-subtitle" id="success-video-title">Your file is compiled and ready for storage.</p>
+          
+          <div class="action-buttons-group">
+            <a id="save-file-btn" href="#" class="btn-accent" download>
+              <i class="fa-solid fa-cloud-arrow-down"></i> Save to Device
+            </a>
+            <button id="reset-btn" class="btn-secondary">
+              <i class="fa-solid fa-rotate-left"></i> Download Another
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="footer">
+      <p>&copy; 2026 REDFIRE. Engineered with raw performance. Built for speed.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <span>&bull;</span>
+        <a href="#">Terms of Service</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

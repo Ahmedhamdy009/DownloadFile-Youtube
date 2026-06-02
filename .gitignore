@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Compiled files
+dist/
+
+# Local Windows binaries (not needed in Git, Render installs Linux ones)
+*.exe
+*.o
+
+# Temporary downloads
+downloads/
+
+# Environmental configurations
+.env
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS specific files
+.DS_Store
+Thumbs.db

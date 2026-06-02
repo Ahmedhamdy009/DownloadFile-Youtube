@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  downloader-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: yt-downloader-premium:latest
+    container_name: yt-downloader-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+    volumes:
+      - downloads_data:/usr/src/app/downloads
+
+volumes:
+  downloads_data:
